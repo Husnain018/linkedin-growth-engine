@@ -14,7 +14,257 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          level: string
+          message: string | null
+          meta: Json | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          level?: string
+          message?: string | null
+          meta?: Json | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          level?: string
+          message?: string | null
+          meta?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      agent_settings: {
+        Row: {
+          ai_extra_instructions: string | null
+          autopilot_enabled: boolean
+          content_pillars: string[]
+          daily_post_time: string
+          notify_email: boolean
+          posts_per_week: number
+          preferred_hashtags: string[]
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_extra_instructions?: string | null
+          autopilot_enabled?: boolean
+          content_pillars?: string[]
+          daily_post_time?: string
+          notify_email?: boolean
+          posts_per_week?: number
+          preferred_hashtags?: string[]
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_extra_instructions?: string | null
+          autopilot_enabled?: boolean
+          content_pillars?: string[]
+          daily_post_time?: string
+          notify_email?: boolean
+          posts_per_week?: number
+          preferred_hashtags?: string[]
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      linkedin_accounts: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          linkedin_name: string | null
+          linkedin_picture: string | null
+          linkedin_urn: string
+          refresh_token: string | null
+          scope: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          linkedin_name?: string | null
+          linkedin_picture?: string | null
+          linkedin_urn: string
+          refresh_token?: string | null
+          scope?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          linkedin_name?: string | null
+          linkedin_picture?: string | null
+          linkedin_urn?: string
+          refresh_token?: string | null
+          scope?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      post_analytics: {
+        Row: {
+          captured_at: string
+          clicks: number | null
+          comments: number | null
+          id: string
+          impressions: number | null
+          likes: number | null
+          post_id: string
+          shares: number | null
+          user_id: string
+        }
+        Insert: {
+          captured_at?: string
+          clicks?: number | null
+          comments?: number | null
+          id?: string
+          impressions?: number | null
+          likes?: number | null
+          post_id: string
+          shares?: number | null
+          user_id: string
+        }
+        Update: {
+          captured_at?: string
+          clicks?: number | null
+          comments?: number | null
+          id?: string
+          impressions?: number | null
+          likes?: number | null
+          post_id?: string
+          shares?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_analytics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          content: string
+          content_hash: string | null
+          created_at: string
+          error_message: string | null
+          hashtags: string[] | null
+          hook: string | null
+          id: string
+          linkedin_post_url: string | null
+          linkedin_post_urn: string | null
+          media_urls: string[] | null
+          published_at: string | null
+          retry_count: number
+          scheduled_for: string | null
+          status: Database["public"]["Enums"]["post_status"]
+          topic: string | null
+          type: Database["public"]["Enums"]["post_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          content_hash?: string | null
+          created_at?: string
+          error_message?: string | null
+          hashtags?: string[] | null
+          hook?: string | null
+          id?: string
+          linkedin_post_url?: string | null
+          linkedin_post_urn?: string | null
+          media_urls?: string[] | null
+          published_at?: string | null
+          retry_count?: number
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["post_status"]
+          topic?: string | null
+          type?: Database["public"]["Enums"]["post_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          content_hash?: string | null
+          created_at?: string
+          error_message?: string | null
+          hashtags?: string[] | null
+          hook?: string | null
+          id?: string
+          linkedin_post_url?: string | null
+          linkedin_post_urn?: string | null
+          media_urls?: string[] | null
+          published_at?: string | null
+          retry_count?: number
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["post_status"]
+          topic?: string | null
+          type?: Database["public"]["Enums"]["post_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          brand_voice: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          niche: string | null
+          target_audience: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          brand_voice?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          niche?: string | null
+          target_audience?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          brand_voice?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          niche?: string | null
+          target_audience?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +273,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      post_status:
+        | "draft"
+        | "scheduled"
+        | "publishing"
+        | "published"
+        | "failed"
+        | "cancelled"
+      post_type: "text" | "image" | "carousel" | "article"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +407,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      post_status: [
+        "draft",
+        "scheduled",
+        "publishing",
+        "published",
+        "failed",
+        "cancelled",
+      ],
+      post_type: ["text", "image", "carousel", "article"],
+    },
   },
 } as const

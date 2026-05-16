@@ -86,7 +86,7 @@ async function uploadImage(accessToken: string, ownerUrn: string, imageDataUrl: 
   const up = await fetch(uploadUrl, {
     method: "PUT",
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": contentType },
-    body: bytes,
+    body: bytes as BodyInit,
   });
   if (!up.ok && up.status !== 201) throw new Error(`upload failed: ${up.status} ${await up.text()}`);
   return asset;

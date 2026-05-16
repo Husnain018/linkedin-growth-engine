@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiLinkedinCallbackRouteImport } from './routes/api/linkedin/callback'
+import { Route as ApiPublicCronPublishRouteImport } from './routes/api/public/cron/publish'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLinkedinCallbackRoute = ApiLinkedinCallbackRouteImport.update({
+  id: '/api/linkedin/callback',
+  path: '/api/linkedin/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCronPublishRoute = ApiPublicCronPublishRouteImport.update({
+  id: '/api/public/cron/publish',
+  path: '/api/public/cron/publish',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/linkedin/callback': typeof ApiLinkedinCallbackRoute
+  '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/linkedin/callback': typeof ApiLinkedinCallbackRoute
+  '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/linkedin/callback': typeof ApiLinkedinCallbackRoute
+  '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/linkedin/callback' | '/api/public/cron/publish'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/linkedin/callback' | '/api/public/cron/publish'
+  id: '__root__' | '/' | '/api/linkedin/callback' | '/api/public/cron/publish'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiLinkedinCallbackRoute: typeof ApiLinkedinCallbackRoute
+  ApiPublicCronPublishRoute: typeof ApiPublicCronPublishRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,12 +68,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/linkedin/callback': {
+      id: '/api/linkedin/callback'
+      path: '/api/linkedin/callback'
+      fullPath: '/api/linkedin/callback'
+      preLoaderRoute: typeof ApiLinkedinCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/publish': {
+      id: '/api/public/cron/publish'
+      path: '/api/public/cron/publish'
+      fullPath: '/api/public/cron/publish'
+      preLoaderRoute: typeof ApiPublicCronPublishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiLinkedinCallbackRoute: ApiLinkedinCallbackRoute,
+  ApiPublicCronPublishRoute: ApiPublicCronPublishRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

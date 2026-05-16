@@ -9,38 +9,163 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedQueueRouteImport } from './routes/_authenticated/queue'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedComposerRouteImport } from './routes/_authenticated/composer'
+import { Route as ApiLinkedinCallbackRouteImport } from './routes/api/linkedin/callback'
+import { Route as ApiPublicCronPublishRouteImport } from './routes/api/public/cron/publish'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedQueueRoute = AuthenticatedQueueRouteImport.update({
+  id: '/queue',
+  path: '/queue',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedComposerRoute = AuthenticatedComposerRouteImport.update({
+  id: '/composer',
+  path: '/composer',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ApiLinkedinCallbackRoute = ApiLinkedinCallbackRouteImport.update({
+  id: '/api/linkedin/callback',
+  path: '/api/linkedin/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCronPublishRoute = ApiPublicCronPublishRouteImport.update({
+  id: '/api/public/cron/publish',
+  path: '/api/public/cron/publish',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/composer': typeof AuthenticatedComposerRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/queue': typeof AuthenticatedQueueRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/api/linkedin/callback': typeof ApiLinkedinCallbackRoute
+  '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/composer': typeof AuthenticatedComposerRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/queue': typeof AuthenticatedQueueRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/api/linkedin/callback': typeof ApiLinkedinCallbackRoute
+  '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_authenticated/composer': typeof AuthenticatedComposerRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/queue': typeof AuthenticatedQueueRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/api/linkedin/callback': typeof ApiLinkedinCallbackRoute
+  '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/composer'
+    | '/dashboard'
+    | '/history'
+    | '/queue'
+    | '/settings'
+    | '/api/linkedin/callback'
+    | '/api/public/cron/publish'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/composer'
+    | '/dashboard'
+    | '/history'
+    | '/queue'
+    | '/settings'
+    | '/api/linkedin/callback'
+    | '/api/public/cron/publish'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/login'
+    | '/_authenticated/composer'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/history'
+    | '/_authenticated/queue'
+    | '/_authenticated/settings'
+    | '/api/linkedin/callback'
+    | '/api/public/cron/publish'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  ApiLinkedinCallbackRoute: typeof ApiLinkedinCallbackRoute
+  ApiPublicCronPublishRoute: typeof ApiPublicCronPublishRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +173,84 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/queue': {
+      id: '/_authenticated/queue'
+      path: '/queue'
+      fullPath: '/queue'
+      preLoaderRoute: typeof AuthenticatedQueueRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/composer': {
+      id: '/_authenticated/composer'
+      path: '/composer'
+      fullPath: '/composer'
+      preLoaderRoute: typeof AuthenticatedComposerRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/linkedin/callback': {
+      id: '/api/linkedin/callback'
+      path: '/api/linkedin/callback'
+      fullPath: '/api/linkedin/callback'
+      preLoaderRoute: typeof ApiLinkedinCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/publish': {
+      id: '/api/public/cron/publish'
+      path: '/api/public/cron/publish'
+      fullPath: '/api/public/cron/publish'
+      preLoaderRoute: typeof ApiPublicCronPublishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedComposerRoute: typeof AuthenticatedComposerRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedQueueRoute: typeof AuthenticatedQueueRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedComposerRoute: AuthenticatedComposerRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedQueueRoute: AuthenticatedQueueRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  LoginRoute: LoginRoute,
+  ApiLinkedinCallbackRoute: ApiLinkedinCallbackRoute,
+  ApiPublicCronPublishRoute: ApiPublicCronPublishRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { generatePost, suggestTopics, generateImage } from "@/lib/ai.functions";
+import { generatePost, suggestTopics, generateImage, analyzeFromFrames } from "@/lib/ai.functions";
 import { upsertPost } from "@/lib/posts.functions";
 import { publishNow } from "@/lib/linkedin.functions";
+import { extractVideoFrames, fileToDataUrl } from "@/lib/extract-frames";
 import { toast } from "sonner";
-import { Sparkles, Loader2, ImageIcon, Send, CalendarClock, Lightbulb } from "lucide-react";
+import { Sparkles, Loader2, ImageIcon, Send, CalendarClock, Lightbulb, Upload, Video, Wand2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/composer")({
   component: Composer,
@@ -20,6 +21,7 @@ function Composer() {
   const imageFn = useServerFn(generateImage);
   const saveFn = useServerFn(upsertPost);
   const publishFn = useServerFn(publishNow);
+  const analyzeFn = useServerFn(analyzeFromFrames);
 
   const [topic, setTopic] = useState("");
   const [type, setType] = useState<"text" | "image" | "carousel">("text");
@@ -27,7 +29,12 @@ function Composer() {
   const [content, setContent] = useState("");
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [imageMode, setImageMode] = useState<"ai" | "upload">("ai");
   const [scheduledFor, setScheduledFor] = useState("");
+  const [videoRequirements, setVideoRequirements] = useState("");
+  const [videoName, setVideoName] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const topics = useQuery({
     queryKey: ["topics"],
@@ -53,6 +60,35 @@ function Composer() {
     onSuccess: (r) => setImageDataUrl(r.dataUrl),
     onError: (e: any) => toast.error("Image: " + e.message),
   });
+
+  const analyzeVideo = useMutation({
+    mutationFn: async (file: File) => {
+      const frames = await extractVideoFrames(file, 4);
+      return analyzeFn({ data: { frames, requirements: videoRequirements || "Draft a high-engagement LinkedIn post based on what's shown.", type } });
+    },
+    onSuccess: (r) => {
+      setContent(r.content);
+      setHashtags(r.hashtags);
+      if (!topic) setTopic(r.hook.slice(0, 120));
+      toast.success("Video analyzed — draft ready");
+    },
+    onError: (e: any) => toast.error("Video: " + e.message),
+  });
+
+  const onPickImage = async (f: File | null) => {
+    if (!f) return;
+    if (!f.type.startsWith("image/")) return toast.error("Please pick an image");
+    if (f.size > 8 * 1024 * 1024) return toast.error("Image must be under 8 MB");
+    setImageDataUrl(await fileToDataUrl(f));
+  };
+
+  const onPickVideo = async (f: File | null) => {
+    if (!f) return;
+    if (!f.type.startsWith("video/")) return toast.error("Please pick a video");
+    if (f.size > 100 * 1024 * 1024) return toast.error("Video must be under 100 MB");
+    setVideoName(f.name);
+    analyzeVideo.mutate(f);
+  };
 
   const save = useMutation({
     mutationFn: (status: "draft" | "scheduled") =>
@@ -177,6 +213,37 @@ function Composer() {
               Generate draft
             </button>
           </div>
+
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-card space-y-3">
+            <h2 className="font-display font-semibold flex items-center gap-2">
+              <Video className="size-4 text-primary-glow" /> Analyze a video
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Upload a clip from your device. The AI samples frames, watches what's shown, and drafts a post grounded in it + your requirements.
+            </p>
+            <textarea
+              value={videoRequirements}
+              onChange={(e) => setVideoRequirements(e.target.value)}
+              rows={2}
+              placeholder="What angle should the post take? Who's the audience? Any key takeaway?"
+              className="w-full px-3 py-2.5 rounded-lg bg-input border border-border text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={(e) => onPickVideo(e.target.files?.[0] ?? null)}
+            />
+            <button
+              onClick={() => videoInputRef.current?.click()}
+              disabled={analyzeVideo.isPending}
+              className="w-full py-2.5 rounded-lg border border-dashed border-border text-sm hover:bg-secondary/30 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {analyzeVideo.isPending ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+              {videoName ? `Re-analyze: ${videoName}` : "Choose video"}
+            </button>
+          </div>
         </div>
 
         <div className="space-y-5">
@@ -199,10 +266,39 @@ function Composer() {
               ))}
             </div>
             {type === "image" && (
-              <div className="mt-4">
+              <div className="mt-4 space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setImageMode("ai")}
+                    className={`py-1.5 rounded-lg text-xs border transition flex items-center justify-center gap-1.5 ${imageMode === "ai" ? "bg-primary text-primary-foreground border-primary" : "bg-secondary/50 border-border text-muted-foreground"}`}
+                  >
+                    <Wand2 className="size-3.5" /> Generate with AI
+                  </button>
+                  <button
+                    onClick={() => setImageMode("upload")}
+                    className={`py-1.5 rounded-lg text-xs border transition flex items-center justify-center gap-1.5 ${imageMode === "upload" ? "bg-primary text-primary-foreground border-primary" : "bg-secondary/50 border-border text-muted-foreground"}`}
+                  >
+                    <Upload className="size-3.5" /> Upload from device
+                  </button>
+                </div>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => onPickImage(e.target.files?.[0] ?? null)}
+                />
                 {imageDataUrl ? (
-                  <img src={imageDataUrl} alt="" className="rounded-lg border border-border max-h-72 object-contain" />
-                ) : (
+                  <div className="space-y-2">
+                    <img src={imageDataUrl} alt="" className="rounded-lg border border-border max-h-72 object-contain w-full" />
+                    <button
+                      onClick={() => setImageDataUrl(null)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Remove image
+                    </button>
+                  </div>
+                ) : imageMode === "ai" ? (
                   <button
                     onClick={() => topic && img.mutate(`A clean, brand-forward visual for a LinkedIn post about: ${topic}`)}
                     disabled={img.isPending || !topic}
@@ -210,6 +306,13 @@ function Composer() {
                   >
                     {img.isPending ? <Loader2 className="size-4 animate-spin" /> : <ImageIcon className="size-4" />}
                     Generate image
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => imageInputRef.current?.click()}
+                    className="w-full py-6 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:bg-secondary/30 flex items-center justify-center gap-2"
+                  >
+                    <Upload className="size-4" /> Choose image from device
                   </button>
                 )}
               </div>

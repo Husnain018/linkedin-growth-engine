@@ -146,3 +146,72 @@ export const generateImage = createServerFn({ method: "POST" })
     if (!imgUrl) throw new Error("No image returned");
     return { dataUrl: imgUrl };
   });
+
+// Analyze a video (via sampled frames extracted on the client) + user
+// requirements, and draft a LinkedIn post grounded in what's visible.
+const AnalyzeFramesInput = z.object({
+  frames: z.array(z.string().startsWith("data:image/")).min(1).max(8),
+  requirements: z.string().min(2).max(2000),
+  type: z.enum(["text", "image", "carousel"]).default("text"),
+});
+
+export const analyzeFromFrames = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => AnalyzeFramesInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("AI is not configured");
+
+    const [{ data: profile }, { data: settings }] = await Promise.all([
+      supabase.from("profiles").select("brand_voice,target_audience,niche").eq("id", userId).maybeSingle(),
+      supabase.from("agent_settings").select("preferred_hashtags,ai_extra_instructions").eq("user_id", userId).maybeSingle(),
+    ]);
+
+    const system = `You are a world-class LinkedIn ghostwriter.
+VOICE: ${profile?.brand_voice ?? "professional, conversational"}
+AUDIENCE: ${profile?.target_audience ?? "professionals"}
+NICHE: ${profile?.niche ?? "general"}
+${settings?.ai_extra_instructions ?? ""}
+You will be shown several frames sampled from a user's video. Use what's visibly in them, combined with the user's stated requirements, to write the post. Be concrete: reference what's actually shown. Strong scroll-stopping hook. Short paragraphs. End with a sharp CTA question. No em-dashes, no "delve", no "leverage".`;
+
+    const userContent: any[] = [
+      {
+        type: "text",
+        text: `Requirements / angle: ${data.requirements}\nPost type: ${data.type}\nSuggested hashtags pool: ${(settings?.preferred_hashtags ?? []).join(", ")}\n\nReturn STRICT JSON: {"hook": string, "content": string, "hashtags": string[], "video_summary": string${data.type === "carousel" ? ', "slides": [{"title":string,"body":string}]' : ""}}`,
+      },
+      ...data.frames.map((url) => ({ type: "image_url", image_url: { url } })),
+    ];
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: userContent },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
+
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`Video analysis failed: ${res.status} ${t}`);
+    }
+    const json = await res.json();
+    const text = json?.choices?.[0]?.message?.content as string | undefined;
+    if (!text) throw new Error("No analysis returned");
+    try {
+      return JSON.parse(text) as {
+        hook: string;
+        content: string;
+        hashtags: string[];
+        video_summary: string;
+        slides?: { title: string; body: string }[];
+      };
+    } catch {
+      throw new Error("Model did not return valid JSON");
+    }
+  });

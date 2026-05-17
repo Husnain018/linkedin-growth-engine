@@ -61,6 +61,35 @@ function Composer() {
     onError: (e: any) => toast.error("Image: " + e.message),
   });
 
+  const analyzeVideo = useMutation({
+    mutationFn: async (file: File) => {
+      const frames = await extractVideoFrames(file, 4);
+      return analyzeFn({ data: { frames, requirements: videoRequirements || "Draft a high-engagement LinkedIn post based on what's shown.", type } });
+    },
+    onSuccess: (r) => {
+      setContent(r.content);
+      setHashtags(r.hashtags);
+      if (!topic) setTopic(r.hook.slice(0, 120));
+      toast.success("Video analyzed — draft ready");
+    },
+    onError: (e: any) => toast.error("Video: " + e.message),
+  });
+
+  const onPickImage = async (f: File | null) => {
+    if (!f) return;
+    if (!f.type.startsWith("image/")) return toast.error("Please pick an image");
+    if (f.size > 8 * 1024 * 1024) return toast.error("Image must be under 8 MB");
+    setImageDataUrl(await fileToDataUrl(f));
+  };
+
+  const onPickVideo = async (f: File | null) => {
+    if (!f) return;
+    if (!f.type.startsWith("video/")) return toast.error("Please pick a video");
+    if (f.size > 100 * 1024 * 1024) return toast.error("Video must be under 100 MB");
+    setVideoName(f.name);
+    analyzeVideo.mutate(f);
+  };
+
   const save = useMutation({
     mutationFn: (status: "draft" | "scheduled") =>
       saveFn({

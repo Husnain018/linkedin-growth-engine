@@ -266,10 +266,39 @@ function Composer() {
               ))}
             </div>
             {type === "image" && (
-              <div className="mt-4">
+              <div className="mt-4 space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setImageMode("ai")}
+                    className={`py-1.5 rounded-lg text-xs border transition flex items-center justify-center gap-1.5 ${imageMode === "ai" ? "bg-primary text-primary-foreground border-primary" : "bg-secondary/50 border-border text-muted-foreground"}`}
+                  >
+                    <Wand2 className="size-3.5" /> Generate with AI
+                  </button>
+                  <button
+                    onClick={() => setImageMode("upload")}
+                    className={`py-1.5 rounded-lg text-xs border transition flex items-center justify-center gap-1.5 ${imageMode === "upload" ? "bg-primary text-primary-foreground border-primary" : "bg-secondary/50 border-border text-muted-foreground"}`}
+                  >
+                    <Upload className="size-3.5" /> Upload from device
+                  </button>
+                </div>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => onPickImage(e.target.files?.[0] ?? null)}
+                />
                 {imageDataUrl ? (
-                  <img src={imageDataUrl} alt="" className="rounded-lg border border-border max-h-72 object-contain" />
-                ) : (
+                  <div className="space-y-2">
+                    <img src={imageDataUrl} alt="" className="rounded-lg border border-border max-h-72 object-contain w-full" />
+                    <button
+                      onClick={() => setImageDataUrl(null)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Remove image
+                    </button>
+                  </div>
+                ) : imageMode === "ai" ? (
                   <button
                     onClick={() => topic && img.mutate(`A clean, brand-forward visual for a LinkedIn post about: ${topic}`)}
                     disabled={img.isPending || !topic}
@@ -277,6 +306,13 @@ function Composer() {
                   >
                     {img.isPending ? <Loader2 className="size-4 animate-spin" /> : <ImageIcon className="size-4" />}
                     Generate image
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => imageInputRef.current?.click()}
+                    className="w-full py-6 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:bg-secondary/30 flex items-center justify-center gap-2"
+                  >
+                    <Upload className="size-4" /> Choose image from device
                   </button>
                 )}
               </div>

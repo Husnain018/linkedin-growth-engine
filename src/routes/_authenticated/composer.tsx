@@ -213,6 +213,37 @@ function Composer() {
               Generate draft
             </button>
           </div>
+
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-card space-y-3">
+            <h2 className="font-display font-semibold flex items-center gap-2">
+              <Video className="size-4 text-primary-glow" /> Analyze a video
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Upload a clip from your device. The AI samples frames, watches what's shown, and drafts a post grounded in it + your requirements.
+            </p>
+            <textarea
+              value={videoRequirements}
+              onChange={(e) => setVideoRequirements(e.target.value)}
+              rows={2}
+              placeholder="What angle should the post take? Who's the audience? Any key takeaway?"
+              className="w-full px-3 py-2.5 rounded-lg bg-input border border-border text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={(e) => onPickVideo(e.target.files?.[0] ?? null)}
+            />
+            <button
+              onClick={() => videoInputRef.current?.click()}
+              disabled={analyzeVideo.isPending}
+              className="w-full py-2.5 rounded-lg border border-dashed border-border text-sm hover:bg-secondary/30 disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {analyzeVideo.isPending ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+              {videoName ? `Re-analyze: ${videoName}` : "Choose video"}
+            </button>
+          </div>
         </div>
 
         <div className="space-y-5">

@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { generatePost, suggestTopics, generateImage } from "@/lib/ai.functions";
+import { generatePost, suggestTopics, generateImage, analyzeFromFrames } from "@/lib/ai.functions";
 import { upsertPost } from "@/lib/posts.functions";
 import { publishNow } from "@/lib/linkedin.functions";
+import { extractVideoFrames, fileToDataUrl } from "@/lib/extract-frames";
 import { toast } from "sonner";
-import { Sparkles, Loader2, ImageIcon, Send, CalendarClock, Lightbulb } from "lucide-react";
+import { Sparkles, Loader2, ImageIcon, Send, CalendarClock, Lightbulb, Upload, Video, Wand2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/composer")({
   component: Composer,

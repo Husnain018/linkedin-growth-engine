@@ -21,6 +21,7 @@ function Composer() {
   const imageFn = useServerFn(generateImage);
   const saveFn = useServerFn(upsertPost);
   const publishFn = useServerFn(publishNow);
+  const analyzeFn = useServerFn(analyzeFromFrames);
 
   const [topic, setTopic] = useState("");
   const [type, setType] = useState<"text" | "image" | "carousel">("text");
@@ -28,7 +29,12 @@ function Composer() {
   const [content, setContent] = useState("");
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [imageMode, setImageMode] = useState<"ai" | "upload">("ai");
   const [scheduledFor, setScheduledFor] = useState("");
+  const [videoRequirements, setVideoRequirements] = useState("");
+  const [videoName, setVideoName] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const topics = useQuery({
     queryKey: ["topics"],
